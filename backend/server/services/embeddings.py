@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import List
+import hashlib
 import math
 import logging
 import os
@@ -28,11 +29,15 @@ class HashEmbeddings(Embeddings):
             raise ValueError("dim must be positive")
         self.dim = dim
 
+    def _bucket(self, token: str) -> int:
+        digest = hashlib.sha256(token.encode("utf-8")).digest()
+        return int.from_bytes(digest[:8], "big") % self.dim
+
     def _vectorize(self, text: str) -> List[float]:
         buckets = [0.0] * self.dim
         for token in text.lower().split():
-            h = hash(token) % self.dim
-            buckets[h] += 1.0
+            idx = self._bucket(token)
+            buckets[idx] += 1.0
         norm = math.sqrt(sum(v * v for v in buckets)) or 1.0
         return [v / norm for v in buckets]
 
