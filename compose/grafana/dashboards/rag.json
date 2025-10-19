@@ -1,0 +1,43 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "API /chat latency (seconds)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(api_request_latency_seconds_bucket{route=\"/chat\"}[1m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(api_request_latency_seconds_bucket{route=\"/chat\"}[1m])) by (le))",
+          "legendFormat": "p50"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "stat",
+      "title": "API request rate (/s)",
+      "targets": [
+        { "expr": "sum(rate(api_requests_total[1m]))" }
+      ],
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 8 }
+    },
+    {
+      "type": "stat",
+      "title": "Worker ingests/sec",
+      "targets": [
+        { "expr": "sum(rate(worker_ingest_total[1m]))" }
+      ],
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 8 }
+    }
+  ],
+  "schemaVersion": 39,
+  "style": "dark",
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "RAG Overview",
+  "version": 1
+}
