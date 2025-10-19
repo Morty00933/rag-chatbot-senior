@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 import os
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 
 # Читаем конфиг из ENV (можно позже заменить на core.config)
 PROMPT_DIR = os.getenv("PROMPT_DIR", "prompts")
@@ -14,7 +14,16 @@ PROMPT_STRICT = os.getenv("PROMPT_STRICT", "true").lower() in {"1", "true", "yes
 PROMPT_CITE = os.getenv("PROMPT_CITE", "true").lower() in {"1", "true", "yes", "y"}
 
 def _prompt_dir() -> Path:
-    return Path(PROMPT_DIR).resolve()
+    configured = Path(PROMPT_DIR)
+    if configured.is_absolute():
+        return configured
+
+    cwd_candidate = Path.cwd() / configured
+    if cwd_candidate.exists():
+        return cwd_candidate
+
+    module_base = Path(__file__).resolve().parents[2] / "prompts"
+    return module_base
 
 @lru_cache(maxsize=1)
 def _jinja_env() -> Environment:
@@ -46,8 +55,19 @@ def get_system_instruction(
     tpl_name = _template_name(lang, variant)
     try:
         tpl = env.get_template(tpl_name)
-    except Exception:
-        tpl = env.get_template(f"system_{lang}.j2")
+    except TemplateNotFound:
+        try:
+            tpl = env.get_template(f"system_{lang}.j2")
+        except TemplateNotFound:
+            base = (
+                "Ты — помощник, который отвечает на вопросы по внутренним документам. "
+                "Говори кратко и по существу."
+            )
+            if strict:
+                base += " Если информации недостаточно — честно скажи об этом."
+            if cite:
+                base += " Добавь список источников из переданных фрагментов."
+            return base
 
     vars: Dict[str, Any] = {"cite": cite, "strict": strict, "language": lang}
     if extra_vars:
