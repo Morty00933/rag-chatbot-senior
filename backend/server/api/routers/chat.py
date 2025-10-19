@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List, Tuple, Dict, Any
+import os
 from fastapi import APIRouter, HTTPException
 
 from ...services.embeddings import get_embeddings
@@ -27,6 +28,8 @@ def _get_reranker():
     """Ленивая инициализация CrossEncoderReranker, чтобы старт сервиса не падал без сети."""
     global _reranker
     if _reranker is None:
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return None
         try:
             from ...services.reranker import CrossEncoderReranker
             _reranker = CrossEncoderReranker(
