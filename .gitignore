@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+
+# Node/Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE/OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Docker / локальные данные
+*.log
+data/
+backend/data/
+compose/**/data/
+.qdrant/
+redis_data/
+qdrant_data/
+ollama_models/
+
+# Бинарники/модели/чекпойнты
+*.bin
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# Кэш huggingface/torch
+~/.cache/
+hf_cache/
+.transformers/
+.torch/
+
+# Тестовые артефакты
+.coverage
+htmlcov/
+pytest_cache/
