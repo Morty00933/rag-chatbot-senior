@@ -1,7 +1,9 @@
 from __future__ import annotations
-from fastapi import APIRouter, UploadFile, File, HTTPException
+import hashlib
+from typing import Dict, List
+
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
-from typing import List, Dict
 
 from ...services.embeddings import get_embeddings
 from ...services.vectorstore import get_vectorstore
@@ -14,8 +16,19 @@ router = APIRouter()
 class IngestResponse(BaseModel):
     ok: bool
     document_id: int
+    document_hash: str
     filename: str
     chunks: int
+
+
+def _stable_document_id(filename: str, document_hash: str) -> int:
+    """Build a deterministic integer identifier for a document."""
+
+    hasher = hashlib.blake2b(digest_size=8)
+    hasher.update(filename.encode("utf-8", errors="ignore"))
+    hasher.update(b"\0")
+    hasher.update(document_hash.encode("ascii"))
+    return int.from_bytes(hasher.digest(), "big", signed=False)
 
 @router.post("", response_model=IngestResponse, tags=["ingest"])
 async def ingest_file(file: UploadFile = File(...)):
@@ -28,8 +41,11 @@ async def ingest_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(400, f"Decode error: {e}")
 
-    # Примитивный стабильный id (в проде — из БД)
-    document_id = abs(hash((file.filename, len(text)))) % (10**9)
+    document_hash = hashlib.sha256(content_bytes).hexdigest()
+    document_size = len(content_bytes)
+    content_type = file.content_type or "application/octet-stream"
+
+    document_id = _stable_document_id(file.filename, document_hash)
 
     rich_chunks = split_with_metadata(
         text=text,
@@ -47,6 +63,8 @@ async def ingest_file(file: UploadFile = File(...)):
     metas: List[Dict] = []
     items_for_store: List[tuple[str, Dict]] = []
 
+    chunk_total = len(rich_chunks)
+
     for idx, rc in enumerate(rich_chunks):
         cid = f"{document_id}:{idx}"
         meta = {
@@ -54,6 +72,10 @@ async def ingest_file(file: UploadFile = File(...)):
             "chunk_index": idx,
             "filename": file.filename,
             "document_id": document_id,
+            "document_sha256": document_hash,
+            "document_size": document_size,
+            "chunk_total": chunk_total,
+            "content_type": content_type,
             "heading": rc.get("heading", ""),
             "level": rc.get("level", "0"),
             "span": rc.get("span", [0, 0])
@@ -69,4 +91,10 @@ async def ingest_file(file: UploadFile = File(...)):
     indexer = Indexer(get_embeddings(), get_vectorstore())
     n = indexer.upsert_chunks(chunks, metas)
 
-    return IngestResponse(ok=True, document_id=document_id, filename=file.filename, chunks=n)
+    return IngestResponse(
+        ok=True,
+        document_id=document_id,
+        document_hash=document_hash,
+        filename=file.filename,
+        chunks=n,
+    )
