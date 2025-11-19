@@ -2,6 +2,9 @@ from __future__ import annotations
 import hashlib
 from typing import Dict, List
 
+import hashlib
+from typing import Dict, List, Tuple
+
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
@@ -33,7 +36,7 @@ def _stable_document_id(filename: str, document_hash: str) -> int:
 
 
 @router.post("", response_model=IngestResponse, tags=["ingest"])
-async def ingest_file(file: UploadFile = File(...)):
+async def ingest_file(file: UploadFile = File(...)) -> IngestResponse:
     content_bytes = await file.read()
     if not content_bytes:
         raise HTTPException(400, "Empty file")
@@ -47,7 +50,9 @@ async def ingest_file(file: UploadFile = File(...)):
     document_size = len(content_bytes)
     content_type = file.content_type or "application/octet-stream"
 
-    document_id = _stable_document_id(file.filename, document_hash)
+    filename = file.filename or ""
+
+    document_id = _stable_document_id(filename, document_hash)
 
     rich_chunks = split_with_metadata(
         text=text,
@@ -62,8 +67,8 @@ async def ingest_file(file: UploadFile = File(...)):
         raise HTTPException(400, "No chunks produced")
 
     chunks: List[str] = []
-    metas: List[Dict] = []
-    items_for_store: List[tuple[str, Dict]] = []
+    metas: List[Dict[str, object]] = []
+    items_for_store: List[Tuple[str, Dict[str, object]]] = []
 
     chunk_total = len(rich_chunks)
 
@@ -72,7 +77,7 @@ async def ingest_file(file: UploadFile = File(...)):
         meta = {
             "chunk_id": cid,
             "chunk_index": idx,
-            "filename": file.filename,
+            "filename": filename,
             "document_id": document_id,
             "document_sha256": document_hash,
             "document_size": document_size,
@@ -97,6 +102,6 @@ async def ingest_file(file: UploadFile = File(...)):
         ok=True,
         document_id=document_id,
         document_hash=document_hash,
-        filename=file.filename,
+        filename=filename,
         chunks=n,
     )

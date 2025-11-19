@@ -1,7 +1,7 @@
 from __future__ import annotations
-import os
 import json
-from typing import Optional, Dict, Iterable, List
+import os
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 class LocalDocStore:
@@ -13,19 +13,20 @@ class LocalDocStore:
         safe = chunk_id.replace("/", "_")
         return os.path.join(self.base_dir, f"{safe}.json")
 
-    def put(self, chunk_id: str, record: Dict) -> None:
+    def put(self, chunk_id: str, record: Dict[str, Any]) -> None:
         path = self._chunk_path(chunk_id)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(record, f, ensure_ascii=False)
 
-    def get(self, chunk_id: str) -> Optional[Dict]:
+    def get(self, chunk_id: str) -> Optional[Dict[str, Any]]:
         path = self._chunk_path(chunk_id)
         if not os.path.exists(path):
             return None
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data: Dict[str, Any] = json.load(f)
+            return data
 
-    def bulk_put(self, items: Iterable[tuple[str, Dict]]) -> None:
+    def bulk_put(self, items: Iterable[Tuple[str, Dict[str, Any]]]) -> None:
         for cid, rec in items:
             self.put(cid, rec)
 

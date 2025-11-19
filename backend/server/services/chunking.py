@@ -1,7 +1,7 @@
 from __future__ import annotations
-import re
 import html
-from typing import List, Tuple, Dict, Optional
+import re
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import tiktoken
@@ -52,7 +52,7 @@ def _split_markdown_sections(
 ) -> List[Tuple[str, Tuple[int, int], Dict[str, str]]]:
     placeholders: List[Tuple[Tuple[int, int], str]] = []
 
-    def _placehold(m: re.Match) -> str:
+    def _placehold(m: re.Match[str]) -> str:
         start, end = m.span()
         placeholders.append(((start, end), m.group(0)))
         return "\ue000" * (end - start)
@@ -120,7 +120,7 @@ def _pack_by_tokens(frags: List[str], chunk_size: int, overlap: int) -> List[str
     cur_tokens: List[int] = []
     cur_texts: List[str] = []
 
-    def flush():
+    def flush() -> None:
         if not cur_texts:
             return
         text = " ".join(cur_texts).strip()
@@ -156,7 +156,7 @@ def split_with_metadata(
     overlap: int = 120,
     strip_html: bool = True,
     markdown_aware: bool = True,
-) -> List[Dict]:
+) -> List[Dict[str, Any]]:
     if not text or not isinstance(text, str):
         return []
 
@@ -171,7 +171,7 @@ def split_with_metadata(
         else [(text, (0, len(text)), {"heading": "", "level": "0"})]
     )
 
-    all_chunks: List[Dict] = []
+    all_chunks: List[Dict[str, Any]] = []
     for section_text, (s_start, s_end), meta in sections:
         paras = _split_paragraphs(section_text)
         sentences: List[str] = []

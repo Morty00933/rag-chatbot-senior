@@ -5,6 +5,8 @@ from datetime import datetime
 
 
 class Base(DeclarativeBase):
+    """Declarative base class for SQLAlchemy models."""
+
     pass
 
 

@@ -3,16 +3,20 @@ from typing import List, Tuple, Dict, Any
 import logging
 import math
 import threading
+from typing import Any, Dict, List, Tuple
 
 from .interfaces import VectorStore
 from ..core.config import settings
 
+QdrantClient: Any
+PointStruct: Any
+
 try:  # pragma: no cover - optional dependency
-    from qdrant_client import QdrantClient  # type: ignore
-    from qdrant_client.http.models import Distance, VectorParams, PointStruct  # type: ignore
+    from qdrant_client import QdrantClient
+    from qdrant_client.http.models import Distance, PointStruct, VectorParams
 except Exception:  # noqa: BLE001 - if qdrant is unavailable we fall back to memory store
-    QdrantClient = None  # type: ignore
-    PointStruct = None  # type: ignore
+    QdrantClient = None
+    PointStruct = None
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +32,7 @@ class InMemoryVectorStore(VectorStore):
         if dim <= 0:
             raise ValueError("dim must be positive")
         self.dim = dim
-        self._store: Dict[str, tuple[List[float], Dict[str, Any]]] = {}
+        self._store: Dict[str, Tuple[List[float], Dict[str, Any]]] = {}
         self._lock = threading.Lock()
 
     def upsert(
@@ -47,12 +51,12 @@ class InMemoryVectorStore(VectorStore):
                 payload = payloads[idx] or {}
                 self._store[vid] = (list(vec), dict(payload))
 
-    def search(self, query: List[float], top_k: int) -> List[Tuple[dict, float]]:
+    def search(self, query: List[float], top_k: int) -> List[Tuple[Dict[str, Any], float]]:
         if len(query) != self.dim:
             raise ValueError("query vector dimensionality mismatch")
         q_norm = math.sqrt(sum(v * v for v in query)) or 1.0
         with self._lock:
-            scored = []
+            scored: List[Tuple[Dict[str, Any], float]] = []
             for _, (vec, payload) in self._store.items():
                 score = sum(q * v for q, v in zip(query, vec)) / (
                     q_norm * (math.sqrt(sum(v * v for v in vec)) or 1.0)
@@ -91,7 +95,7 @@ class QdrantVS(VectorStore):
         ]
         self.client.upsert(collection_name=self.collection, points=points, wait=True)
 
-    def search(self, query: List[float], top_k: int) -> List[Tuple[dict, float]]:
+    def search(self, query: List[float], top_k: int) -> List[Tuple[Dict[str, Any], float]]:
         res = self.client.search(
             collection_name=self.collection,
             query_vector=query,
