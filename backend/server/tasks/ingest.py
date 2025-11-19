@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from .celery_app import celery_app
 from ..services.embeddings import get_embeddings
 from ..services.vectorstore import get_vectorstore
@@ -6,7 +7,7 @@ from ..services.indexing import Indexer
 from ..services.chunking import split_text
 
 
-@celery_app.task(name="ingest.text")  # type: ignore[misc]
+@celery_app.task(name="ingest.text")
 def ingest_text(doc_id: int, filename: str, content: str) -> dict[str, int | bool]:
     chunks = split_text(content)
     metas = [

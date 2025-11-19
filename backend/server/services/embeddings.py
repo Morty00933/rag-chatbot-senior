@@ -12,7 +12,7 @@ from ..core.config import settings
 try:  # pragma: no cover - module availability depends on environment
     from sentence_transformers import SentenceTransformer
 except Exception:  # noqa: BLE001 - we intentionally swallow import issues here
-    SentenceTransformer = None  # type: ignore
+    SentenceTransformer = None
 
 
 logger = logging.getLogger(__name__)

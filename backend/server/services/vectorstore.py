@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import List, Tuple, Dict, Any
 import logging
 import math
@@ -6,9 +7,6 @@ import threading
 
 from .interfaces import VectorStore
 from ..core.config import settings
-
-QdrantClient: Any
-PointStruct: Any
 
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient
