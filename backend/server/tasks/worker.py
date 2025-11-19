@@ -29,9 +29,7 @@ def heartbeat_loop():
 
 
 def start_metrics_server():
-    uvicorn.run(
-        app, host="0.0.0.0", port=settings.WORKER_METRICS_PORT, log_level="warning"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=settings.WORKER_METRICS_PORT, log_level="warning")
 
 
 def start_celery():

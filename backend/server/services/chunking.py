@@ -196,9 +196,7 @@ def split_with_metadata(
                     "level": meta.get("level", "0"),
                     "span": [s_start, s_end],
                     "filename": filename or "",
-                    "document_id": (
-                        int(document_id) if document_id is not None else None
-                    ),
+                    "document_id": (int(document_id) if document_id is not None else None),
                 }
             )
 

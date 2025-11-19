@@ -11,9 +11,7 @@ class OllamaLLM(LLM):
 
     async def _pull_if_needed(self) -> None:
         async with httpx.AsyncClient(timeout=None) as client:
-            r = await client.post(
-                f"{self.host}/api/pull", json={"name": self.model}, timeout=None
-            )
+            r = await client.post(f"{self.host}/api/pull", json={"name": self.model}, timeout=None)
             r.raise_for_status()
 
     async def generate(self, prompt: str) -> str:

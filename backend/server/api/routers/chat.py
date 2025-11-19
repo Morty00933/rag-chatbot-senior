@@ -33,10 +33,8 @@ def _get_reranker():
         try:
             from ...services.reranker import CrossEncoderReranker
 
-            _reranker = CrossEncoderReranker(
-                model_name="cross-encoder/ms-marco-MiniLM-L-6-v2"
-            )
-        except Exception as e:
+            _reranker = CrossEncoderReranker(model_name="cross-encoder/ms-marco-MiniLM-L-6-v2")
+        except Exception:
             # Не выбрасываем — просто оставляем _reranker = None, чтобы был graceful degrade
             _reranker = None
     return _reranker
@@ -54,13 +52,7 @@ def _normalize_candidate(c: Any) -> Tuple[str, Dict[str, Any], float]:
         return str(chunk_id), (payload or {}), float(score or 0.0)
 
     if isinstance(c, dict):
-        cid = (
-            c.get("id")
-            or c.get("chunk_id")
-            or c.get("point_id")
-            or c.get("uuid")
-            or "unknown"
-        )
+        cid = c.get("id") or c.get("chunk_id") or c.get("point_id") or c.get("uuid") or "unknown"
         payload = c.get("payload") or {}
         score = c.get("score") or 0.0
         return str(cid), payload, float(score)

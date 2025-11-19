@@ -79,13 +79,6 @@ def get_system_instruction(
     return tpl.render(**vars).strip()
 
 
-def build_user_prompt(
-    question: str, contexts: List[str], system_instruction: str
-) -> str:
+def build_user_prompt(question: str, contexts: List[str], system_instruction: str) -> str:
     ctx = "\n---\n".join(contexts)
-    return (
-        f"{system_instruction}\n\n"
-        f"Вопрос: {question}\n\n"
-        f"Контекстные фрагменты:\n{ctx}\n\n"
-        f"Ответ:"
-    )
+    return f"{system_instruction}\n\nВопрос: {question}\n\nКонтекстные фрагменты:\n{ctx}\n\nОтвет:"
