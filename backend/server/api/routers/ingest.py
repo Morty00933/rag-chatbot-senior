@@ -2,8 +2,7 @@ from __future__ import annotations
 import hashlib
 from typing import Dict, List
 
-import hashlib
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel

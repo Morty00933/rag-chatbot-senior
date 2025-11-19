@@ -3,7 +3,6 @@ from typing import List, Tuple, Dict, Any
 import logging
 import math
 import threading
-from typing import Any, Dict, List, Tuple
 
 from .interfaces import VectorStore
 from ..core.config import settings
