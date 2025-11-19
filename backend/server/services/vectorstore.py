@@ -10,7 +10,9 @@ from ..core.config import settings
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient  # type: ignore
     from qdrant_client.http.models import Distance, VectorParams, PointStruct  # type: ignore
-except Exception:  # noqa: BLE001 - if qdrant is unavailable we fall back to memory store
+except (
+    Exception
+):  # noqa: BLE001 - if qdrant is unavailable we fall back to memory store
     QdrantClient = None  # type: ignore
     PointStruct = None  # type: ignore
 
@@ -108,7 +110,9 @@ def _build_vectorstore() -> VectorStore:
         return InMemoryVectorStore(settings.EMBED_DIM)
     if backend == "qdrant":
         try:
-            return QdrantVS(settings.QDRANT_URL, settings.QDRANT_COLLECTION, settings.EMBED_DIM)
+            return QdrantVS(
+                settings.QDRANT_URL, settings.QDRANT_COLLECTION, settings.EMBED_DIM
+            )
         except Exception as exc:  # noqa: BLE001 - gracefully degrade for tests
             logger.warning("Falling back to InMemoryVectorStore due to error: %s", exc)
             return InMemoryVectorStore(settings.EMBED_DIM)

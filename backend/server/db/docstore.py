@@ -3,6 +3,7 @@ import os
 import json
 from typing import Optional, Dict, Iterable, List
 
+
 class LocalDocStore:
     def __init__(self, base_dir: str):
         self.base_dir = os.path.abspath(base_dir)
@@ -30,4 +31,8 @@ class LocalDocStore:
 
     def list_by_document(self, document_id: int) -> List[str]:
         prefix = f"{document_id}:"
-        return [fn[:-5] for fn in os.listdir(self.base_dir) if fn.endswith(".json") and fn.startswith(prefix)]
+        return [
+            fn[:-5]
+            for fn in os.listdir(self.base_dir)
+            if fn.endswith(".json") and fn.startswith(prefix)
+        ]

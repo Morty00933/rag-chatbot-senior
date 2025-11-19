@@ -22,14 +22,18 @@ def _client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> TestClient:
     return TestClient(app)
 
 
-def _ingest(client: TestClient, filename: str, content: bytes, content_type: str = "text/plain"):
+def _ingest(
+    client: TestClient, filename: str, content: bytes, content_type: str = "text/plain"
+):
     files = {"file": (filename, io.BytesIO(content), content_type)}
     response = client.post("/ingest", files=files)
     assert response.status_code == 200, response.text
     return response.json()
 
 
-def test_document_identity_is_deterministic(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+def test_document_identity_is_deterministic(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     client = _client(monkeypatch, tmp_path)
 
     payload_text = (

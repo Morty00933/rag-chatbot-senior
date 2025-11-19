@@ -32,6 +32,7 @@ def _get_reranker():
             return None
         try:
             from ...services.reranker import CrossEncoderReranker
+
             _reranker = CrossEncoderReranker(
                 model_name="cross-encoder/ms-marco-MiniLM-L-6-v2"
             )
@@ -53,7 +54,13 @@ def _normalize_candidate(c: Any) -> Tuple[str, Dict[str, Any], float]:
         return str(chunk_id), (payload or {}), float(score or 0.0)
 
     if isinstance(c, dict):
-        cid = c.get("id") or c.get("chunk_id") or c.get("point_id") or c.get("uuid") or "unknown"
+        cid = (
+            c.get("id")
+            or c.get("chunk_id")
+            or c.get("point_id")
+            or c.get("uuid")
+            or "unknown"
+        )
         payload = c.get("payload") or {}
         score = c.get("score") or 0.0
         return str(cid), payload, float(score)
@@ -63,8 +70,7 @@ def _normalize_candidate(c: Any) -> Tuple[str, Dict[str, Any], float]:
 
 
 def _collect_contexts_and_refs(
-    candidates: List[Any],
-    max_ctx: int = 6
+    candidates: List[Any], max_ctx: int = 6
 ) -> Tuple[List[str], List[Reference]]:
     """
     По id чанков достаём тексты из docstore и формируем ссылки.
@@ -102,7 +108,7 @@ def _collect_contexts_and_refs(
                 filename=str(filename),
                 score=float(score),
                 chunk_ord=chunk_ord,
-                preview=safe_text[:200]
+                preview=safe_text[:200],
             )
         )
 
@@ -123,7 +129,9 @@ async def chat(req: ChatRequest) -> ChatResponse:
         first_hits = []
 
     # 2) поднимаем тексты и ссылки
-    contexts_raw, refs_raw = _collect_contexts_and_refs(first_hits, max_ctx=len(first_hits) or FIRST_K)
+    contexts_raw, refs_raw = _collect_contexts_and_refs(
+        first_hits, max_ctx=len(first_hits) or FIRST_K
+    )
 
     # Если контекстов нет — честный ответ
     if not contexts_raw:

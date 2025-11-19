@@ -3,8 +3,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Text, DateTime
 from datetime import datetime
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class Document(Base):
     __tablename__ = "documents"
@@ -13,6 +15,7 @@ class Document(Base):
     mime: Mapped[str] = mapped_column(String(100))
     size: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 
 class Chunk(Base):
     __tablename__ = "chunks"

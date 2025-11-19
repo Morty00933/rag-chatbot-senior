@@ -13,6 +13,7 @@ PROMPT_VARIANT = os.getenv("PROMPT_VARIANT", "v1")
 PROMPT_STRICT = os.getenv("PROMPT_STRICT", "true").lower() in {"1", "true", "yes", "y"}
 PROMPT_CITE = os.getenv("PROMPT_CITE", "true").lower() in {"1", "true", "yes", "y"}
 
+
 def _prompt_dir() -> Path:
     configured = Path(PROMPT_DIR)
     if configured.is_absolute():
@@ -25,6 +26,7 @@ def _prompt_dir() -> Path:
     module_base = Path(__file__).resolve().parents[2] / "prompts"
     return module_base
 
+
 @lru_cache(maxsize=1)
 def _jinja_env() -> Environment:
     env = Environment(
@@ -35,8 +37,10 @@ def _jinja_env() -> Environment:
     )
     return env
 
+
 def _template_name(lang: str, variant: str) -> str:
     return f"system_{lang}_{variant}.j2"
+
 
 @lru_cache(maxsize=128)
 def get_system_instruction(
@@ -74,7 +78,10 @@ def get_system_instruction(
         vars.update(extra_vars)
     return tpl.render(**vars).strip()
 
-def build_user_prompt(question: str, contexts: List[str], system_instruction: str) -> str:
+
+def build_user_prompt(
+    question: str, contexts: List[str], system_instruction: str
+) -> str:
     ctx = "\n---\n".join(contexts)
     return (
         f"{system_instruction}\n\n"

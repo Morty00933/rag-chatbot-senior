@@ -7,9 +7,11 @@ from .interfaces import Embeddings, VectorStore
 # Фиксированный namespace для детерминированных UUID
 _UUID_NS = uuid.UUID("11111111-2222-3333-4444-555555555555")
 
+
 def _to_point_id(chunk_id: str) -> str:
     # детерминированный uuid5 по chunk_id
     return str(uuid.uuid5(_UUID_NS, str(chunk_id)))
+
 
 class Indexer:
     def __init__(self, embed: Embeddings, vectorstore: VectorStore):

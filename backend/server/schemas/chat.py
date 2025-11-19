@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 
+
 class Reference(BaseModel):
     document_id: int
     filename: str
@@ -8,9 +9,11 @@ class Reference(BaseModel):
     chunk_ord: int
     preview: str
 
+
 class ChatRequest(BaseModel):
     question: str
     top_k: int = 6
+
 
 class ChatResponse(BaseModel):
     answer: str

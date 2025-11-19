@@ -3,6 +3,7 @@ import httpx
 from .interfaces import LLM
 from ..core.config import settings
 
+
 class OllamaLLM(LLM):
     def __init__(self, host: str, model: str):
         self.host = host.rstrip("/")
@@ -10,7 +11,9 @@ class OllamaLLM(LLM):
 
     async def _pull_if_needed(self) -> None:
         async with httpx.AsyncClient(timeout=None) as client:
-            r = await client.post(f"{self.host}/api/pull", json={"name": self.model}, timeout=None)
+            r = await client.post(
+                f"{self.host}/api/pull", json={"name": self.model}, timeout=None
+            )
             r.raise_for_status()
 
     async def generate(self, prompt: str) -> str:
@@ -23,6 +26,7 @@ class OllamaLLM(LLM):
             r.raise_for_status()
             data = r.json()
             return data.get("response", "")
+
 
 def get_llm() -> LLM:
     if settings.LLM_PROVIDER == "ollama":

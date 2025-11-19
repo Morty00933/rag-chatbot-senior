@@ -5,27 +5,36 @@ from typing import List, Tuple, Dict, Optional
 
 try:
     import tiktoken
+
     _ENC = tiktoken.get_encoding("cl100k_base")
+
     def _encode(txt: str) -> List[int]:
         return _ENC.encode(txt)
+
     def _decode(tokens: List[int]) -> str:
         return _ENC.decode(tokens)
+
 except Exception:
     _WORD_RE = re.compile(r"\w+|[^\w\s]", re.UNICODE)
+
     def _encode(txt: str) -> List[int]:
         return [abs(hash(t)) % (2**20) for t in _WORD_RE.findall(txt)]
+
     def _decode(tokens: List[int]) -> str:
         raise RuntimeError("Fallback tokenizer cannot decode tokens back to text")
+
 
 _CODE_BLOCK_RE = re.compile(r"```.*?```", flags=re.DOTALL)
 _TAG_RE = re.compile(r"<[^>]+>")
 MULTI_NL_RE = re.compile(r"\n{3,}")
 NBSP_RE = re.compile(r"\xa0")
 
+
 def _strip_html(text: str) -> str:
     text = html.unescape(text)
     text = _TAG_RE.sub("", text)
     return text
+
 
 def _normalize_ws(text: str) -> str:
     text = NBSP_RE.sub(" ", text)
@@ -33,15 +42,20 @@ def _normalize_ws(text: str) -> str:
     text = MULTI_NL_RE.sub("\n\n", text)
     return text.strip()
 
+
 _MD_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
 _MD_LIST_RE = re.compile(r"^(\s*[-*+]\s+|\s*\d+\.\s+)", re.MULTILINE)
 
-def _split_markdown_sections(text: str) -> List[Tuple[str, Tuple[int, int], Dict[str, str]]]:
+
+def _split_markdown_sections(
+    text: str,
+) -> List[Tuple[str, Tuple[int, int], Dict[str, str]]]:
     placeholders: List[Tuple[Tuple[int, int], str]] = []
+
     def _placehold(m: re.Match) -> str:
         start, end = m.span()
         placeholders.append(((start, end), m.group(0)))
-        return "\uE000" * (end - start)
+        return "\ue000" * (end - start)
 
     masked = _CODE_BLOCK_RE.sub(_placehold, text)
     heads = list(_MD_HEADING_RE.finditer(masked))
@@ -62,7 +76,9 @@ def _split_markdown_sections(text: str) -> List[Tuple[str, Tuple[int, int], Dict
         result.append((seg, (start, end), {"heading": heading, "level": level}))
     return result
 
+
 _SENT_END_RE = re.compile(r"(?<!\b[A-ZА-ЯЁ]\.)(?<=[\.\!\?])\s+(?=[A-ZА-ЯЁ])")
+
 
 def _split_paragraphs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
     parts: List[Tuple[str, Tuple[int, int]]] = []
@@ -73,6 +89,7 @@ def _split_paragraphs(text: str) -> List[Tuple[str, Tuple[int, int]]]:
         parts.append((block, (s, e)))
         start = e + 2
     return [p for p in parts if p[0].strip()]
+
 
 def _split_sentences(block: str) -> List[str]:
     block = block.strip()
@@ -96,6 +113,7 @@ def _split_sentences(block: str) -> List[str]:
     if buf:
         merged.append(buf.strip())
     return merged
+
 
 def _pack_by_tokens(frags: List[str], chunk_size: int, overlap: int) -> List[str]:
     chunks: List[str] = []
@@ -129,6 +147,7 @@ def _pack_by_tokens(frags: List[str], chunk_size: int, overlap: int) -> List[str
     flush()
     return chunks
 
+
 def split_with_metadata(
     text: str,
     filename: Optional[str] = None,
@@ -136,7 +155,7 @@ def split_with_metadata(
     chunk_size: int = 800,
     overlap: int = 120,
     strip_html: bool = True,
-    markdown_aware: bool = True
+    markdown_aware: bool = True,
 ) -> List[Dict]:
     if not text or not isinstance(text, str):
         return []
@@ -146,7 +165,11 @@ def split_with_metadata(
     text = _normalize_ws(text)
 
     sections: List[Tuple[str, Tuple[int, int], Dict[str, str]]]
-    sections = _split_markdown_sections(text) if markdown_aware else [(text, (0, len(text)), {"heading": "", "level": "0"})]
+    sections = (
+        _split_markdown_sections(text)
+        if markdown_aware
+        else [(text, (0, len(text)), {"heading": "", "level": "0"})]
+    )
 
     all_chunks: List[Dict] = []
     for section_text, (s_start, s_end), meta in sections:
@@ -166,14 +189,18 @@ def split_with_metadata(
 
         packed = _pack_by_tokens(sentences, chunk_size=chunk_size, overlap=overlap)
         for ch in packed:
-            all_chunks.append({
-                "text": ch,
-                "heading": meta.get("heading", ""),
-                "level": meta.get("level", "0"),
-                "span": [s_start, s_end],
-                "filename": filename or "",
-                "document_id": int(document_id) if document_id is not None else None
-            })
+            all_chunks.append(
+                {
+                    "text": ch,
+                    "heading": meta.get("heading", ""),
+                    "level": meta.get("level", "0"),
+                    "span": [s_start, s_end],
+                    "filename": filename or "",
+                    "document_id": (
+                        int(document_id) if document_id is not None else None
+                    ),
+                }
+            )
 
     cleaned = []
     for c in all_chunks:
@@ -187,12 +214,13 @@ def split_with_metadata(
 
     return cleaned
 
+
 def split_text(
     text: str,
     chunk_size: int = 800,
     overlap: int = 120,
     strip_html: bool = True,
-    markdown_aware: bool = True
+    markdown_aware: bool = True,
 ) -> List[str]:
     out = split_with_metadata(
         text=text,
@@ -201,6 +229,6 @@ def split_text(
         chunk_size=chunk_size,
         overlap=overlap,
         strip_html=strip_html,
-        markdown_aware=markdown_aware
+        markdown_aware=markdown_aware,
     )
     return [c["text"] for c in out]

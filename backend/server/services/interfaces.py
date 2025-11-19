@@ -16,10 +16,10 @@ class LLM(ABC):
 class VectorStore(ABC):
     @abstractmethod
     def upsert(
-            self,
-            ids: List[str],
-            vectors: List[List[float]],
-            payloads: List[Dict[str, Any]],
+        self,
+        ids: List[str],
+        vectors: List[List[float]],
+        payloads: List[Dict[str, Any]],
     ) -> None: ...
 
     @abstractmethod

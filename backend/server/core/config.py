@@ -1,7 +1,9 @@
 from __future__ import annotations
 from functools import lru_cache
 from pydantic_settings import BaseSettings  # <-- важно: из pydantic_settings
+
 # pydantic v2: поля по умолчанию и типы — как в v2
+
 
 class Settings(BaseSettings):
     # --- Core ---
@@ -49,8 +51,10 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
+
 @lru_cache(maxsize=1)
 def get_settings() -> "Settings":
     return Settings()
+
 
 settings = get_settings()

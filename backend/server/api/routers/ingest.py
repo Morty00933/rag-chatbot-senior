@@ -13,6 +13,7 @@ from ...db import get_docstore
 
 router = APIRouter()
 
+
 class IngestResponse(BaseModel):
     ok: bool
     document_id: int
@@ -29,6 +30,7 @@ def _stable_document_id(filename: str, document_hash: str) -> int:
     hasher.update(b"\0")
     hasher.update(document_hash.encode("ascii"))
     return int.from_bytes(hasher.digest(), "big", signed=False)
+
 
 @router.post("", response_model=IngestResponse, tags=["ingest"])
 async def ingest_file(file: UploadFile = File(...)):
@@ -54,7 +56,7 @@ async def ingest_file(file: UploadFile = File(...)):
         chunk_size=800,
         overlap=120,
         strip_html=True,
-        markdown_aware=True
+        markdown_aware=True,
     )
     if not rich_chunks:
         raise HTTPException(400, "No chunks produced")
@@ -78,7 +80,7 @@ async def ingest_file(file: UploadFile = File(...)):
             "content_type": content_type,
             "heading": rc.get("heading", ""),
             "level": rc.get("level", "0"),
-            "span": rc.get("span", [0, 0])
+            "span": rc.get("span", [0, 0]),
         }
         metas.append(meta)
         chunks.append(rc["text"])
