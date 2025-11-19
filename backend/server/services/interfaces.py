@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
 
 
 class Embeddings(ABC):
@@ -23,4 +23,4 @@ class VectorStore(ABC):
     ) -> None: ...
 
     @abstractmethod
-    def search(self, query: List[float], top_k: int) -> List[Tuple[dict, float]]: ...
+    def search(self, query: List[float], top_k: int) -> List[Tuple[Dict[str, Any], float]]: ...

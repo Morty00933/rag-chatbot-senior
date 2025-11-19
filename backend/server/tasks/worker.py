@@ -16,23 +16,23 @@ app = FastAPI(title="Worker Metrics", version="0.1.0")
 
 
 @app.get("/")
-async def metrics_root():
+async def metrics_root() -> PlainTextResponse:
     data = generate_latest()
     return PlainTextResponse(data.decode("utf-8"), media_type=CONTENT_TYPE_LATEST)
 
 
-def heartbeat_loop():
+def heartbeat_loop() -> None:
     name = "celery-worker-1"
     while True:
         worker_heartbeat.labels(name).set(time.time())
         time.sleep(5)
 
 
-def start_metrics_server():
+def start_metrics_server() -> None:
     uvicorn.run(app, host="0.0.0.0", port=settings.WORKER_METRICS_PORT, log_level="warning")
 
 
-def start_celery():
+def start_celery() -> None:
     celery_app.worker_main(["worker", "-l", "INFO", "-Q", "celery"])
 
 

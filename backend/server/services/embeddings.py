@@ -10,7 +10,7 @@ from .interfaces import Embeddings
 from ..core.config import settings
 
 try:  # pragma: no cover - module availability depends on environment
-    from sentence_transformers import SentenceTransformer  # type: ignore
+    from sentence_transformers import SentenceTransformer
 except Exception:  # noqa: BLE001 - we intentionally swallow import issues here
     SentenceTransformer = None  # type: ignore
 
@@ -59,8 +59,10 @@ class SbertEmbeddings(Embeddings):
             self.model = model
 
     def embed(self, texts: List[str]) -> List[List[float]]:
-        vecs = self.model.encode(texts, normalize_embeddings=True).tolist()
-        return vecs
+        raw_vecs = self.model.encode(texts, normalize_embeddings=True)
+        if hasattr(raw_vecs, "tolist"):
+            return raw_vecs.tolist()
+        return [list(vec) for vec in raw_vecs]
 
 
 def _build_embeddings() -> Embeddings:

@@ -13,4 +13,5 @@ def create_jwt(subject: str) -> str:
         "exp": now + timedelta(minutes=settings.JWT_EXPIRES_MIN),
         "iat": now,
     }
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGO)
+    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=ALGO)
+    return str(token)
