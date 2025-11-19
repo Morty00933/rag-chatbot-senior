@@ -1,6 +1,8 @@
 from __future__ import annotations
+from typing import Any, Awaitable, Callable
+
 from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse, JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
@@ -18,7 +20,7 @@ app = FastAPI(title="RAG API", version="0.1.0")
 
 
 @app.get("/")
-def root():
+def root() -> dict[str, list[str] | str]:
     return {"status": "ok", "see": ["/docs", "/healthz", "/metrics"]}
 
 
@@ -42,9 +44,11 @@ api_latency_hist = Histogram(
 
 
 @app.middleware("http")
-async def metrics_middleware(request: Request, call_next):
+async def metrics_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     start = time.perf_counter()
-    response = None
+    response: Response
     try:
         response = await call_next(request)
         return response
@@ -56,12 +60,12 @@ async def metrics_middleware(request: Request, call_next):
 
 
 @app.get("/healthz", tags=["health"])
-async def healthz():
+async def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @app.get(settings.API_METRICS_PATH, tags=["metrics"])
-async def metrics():
+async def metrics() -> PlainTextResponse | JSONResponse:
     if not settings.PROMETHEUS_ENABLED:
         return JSONResponse({"detail": "metrics disabled"}, status_code=404)
     data = generate_latest(REGISTRY)

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict
+from typing import Any, Dict, List
 import uuid
 
 from .interfaces import Embeddings, VectorStore
@@ -18,7 +18,7 @@ class Indexer:
         self.embed = embed
         self.vectorstore = vectorstore
 
-    def upsert_chunks(self, chunks: List[str], metas: List[Dict]) -> int:
+    def upsert_chunks(self, chunks: List[str], metas: List[Dict[str, Any]]) -> int:
         if len(chunks) != len(metas):
             raise ValueError("chunks and metas must have equal length")
         if not chunks:
@@ -29,7 +29,7 @@ class Indexer:
             raise RuntimeError("embeddings size mismatch")
 
         ids: List[str] = []
-        payloads: List[Dict] = []
+        payloads: List[Dict[str, Any]] = []
         for i, m in enumerate(metas):
             m = dict(m or {})
             orig_chunk_id = str(m.get("chunk_id", f"missing:{i}"))

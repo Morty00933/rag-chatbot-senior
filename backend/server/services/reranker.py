@@ -1,6 +1,6 @@
 # server/services/reranker.py
 from __future__ import annotations
-from typing import List, Sequence, Tuple, Optional
+from typing import List, Optional, Sequence, Tuple
 from sentence_transformers import CrossEncoder
 
 
@@ -15,14 +15,14 @@ class CrossEncoderReranker:
         device: Optional[str] = None,
     ):
         # device=None -> auto
-        self.model = CrossEncoder(model_name, device=device)
+        self.model = CrossEncoder(model_name, device=device or "cpu")
 
     def score_pairs(self, queries: Sequence[str], docs: Sequence[str]) -> List[float]:
         """
         Оценить список пар (q_i, d_i). Длины должны совпадать.
         """
         assert len(queries) == len(docs), "queries and docs must have the same length"
-        pairs: List[Tuple[str, str]] = list(zip(queries, docs))
+        pairs: List[List[str]] = [[q, d] for q, d in zip(queries, docs)]
         scores = self.model.predict(pairs)  # numpy.ndarray
         return scores.tolist() if hasattr(scores, "tolist") else list(scores)
 
@@ -30,7 +30,7 @@ class CrossEncoderReranker:
         """
         Оценить один query против массива документов: (query, d_j) для всех j.
         """
-        pairs = [(query, d) for d in docs]
+        pairs: List[List[str]] = [[query, d] for d in docs]
         scores = self.model.predict(pairs)
         return scores.tolist() if hasattr(scores, "tolist") else list(scores)
 

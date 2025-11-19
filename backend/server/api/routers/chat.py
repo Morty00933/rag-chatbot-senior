@@ -1,20 +1,25 @@
 from __future__ import annotations
-from typing import List, Tuple, Dict, Any
+
 import os
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
+
 from fastapi import APIRouter, HTTPException
 
 from ...services.embeddings import get_embeddings
-from ...services.vectorstore import get_vectorstore
-from ...services.retriever import HybridRetriever
 from ...services.llm import get_llm
+from ...services.retriever import HybridRetriever
+from ...services.vectorstore import get_vectorstore
 from ...schemas.chat import ChatRequest, ChatResponse, Reference
 from ...services.prompting import get_system_instruction, build_user_prompt
 from ...db import get_docstore
 
+if TYPE_CHECKING:
+    from ...services.reranker import CrossEncoderReranker
+
 # ВАЖНО: импортируем внутри функции, чтобы не падать при старте,
 # если у контейнера нет сети для скачивания модели
 # (ленивая инициализация в _get_reranker()).
-_reranker = None
+_reranker: "CrossEncoderReranker | None" = None
 
 router = APIRouter()
 
@@ -24,7 +29,7 @@ FINAL_K = 6
 MAX_CTX_LEN = 4000
 
 
-def _get_reranker():
+def _get_reranker() -> "CrossEncoderReranker | None":
     """Ленивая инициализация CrossEncoderReranker, чтобы старт сервиса не падал без сети."""
     global _reranker
     if _reranker is None:
@@ -88,15 +93,19 @@ def _collect_contexts_and_refs(
         if not text:
             continue  # пропускаем пустые
 
-        filename = (meta or {}).get("filename", "unknown")
-        doc_id = (meta or {}).get("document_id", "unknown")
+        filename = str((meta or {}).get("filename", "unknown"))
+        doc_id_raw = (meta or {}).get("document_id", 0)
+        try:
+            doc_id = int(doc_id_raw)
+        except (TypeError, ValueError):
+            doc_id = 0
         chunk_ord = int((meta or {}).get("chunk_ord", 0))
 
         safe_text = text[:MAX_CTX_LEN]
         contexts.append(safe_text)
         refs.append(
             Reference(
-                document_id=str(doc_id),
+                document_id=doc_id,
                 filename=str(filename),
                 score=float(score),
                 chunk_ord=chunk_ord,

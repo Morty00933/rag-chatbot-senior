@@ -23,7 +23,8 @@ class OllamaLLM(LLM):
                 r = await client.post(f"{self.host}/api/generate", json=payload)
             r.raise_for_status()
             data = r.json()
-            return data.get("response", "")
+            response = data.get("response", "")
+            return str(response)
 
 
 def get_llm() -> LLM:
