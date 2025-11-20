@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Any
 import hashlib
 import math
 import logging
@@ -9,11 +9,15 @@ import os
 from .interfaces import Embeddings
 from ..core.config import settings
 
-try:  # pragma: no cover - module availability depends on environment
-    from sentence_transformers import SentenceTransformer
-except Exception:  # noqa: BLE001 - we intentionally swallow import issues here
-    SentenceTransformer = None
+# Для mypy объявляем как Any, а реальное значение задаём ниже
+SentenceTransformer: Any
 
+try:  # pragma: no cover - module availability depends on environment
+    from sentence_transformers import SentenceTransformer as _SentenceTransformer
+except Exception:  # noqa: BLE001 - we intentionally swallow import issues here
+    _SentenceTransformer = None
+
+SentenceTransformer = _SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +76,6 @@ def _build_embeddings() -> Embeddings:
     if provider == "sbert":
         if os.environ.get("PYTEST_CURRENT_TEST"):
             logger.info("Using HashEmbeddings because tests are running")
-            return HashEmbeddings(settings.EMBED_DIM)
         try:
             return SbertEmbeddings(settings.EMBED_MODEL)
         except Exception as exc:  # noqa: BLE001 - we want a graceful fallback
