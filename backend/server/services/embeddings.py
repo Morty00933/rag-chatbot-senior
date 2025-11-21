@@ -10,12 +10,11 @@ from .interfaces import Embeddings
 from ..core.config import settings
 
 try:  # pragma: no cover - module availability depends on environment
-    from sentence_transformers import SentenceTransformer as _SentenceTransformer
+    from sentence_transformers import SentenceTransformer
+    _HAS_SENTENCE_TRANSFORMERS = True
 except Exception:  # noqa: BLE001 - we intentionally swallow import issues here
-    _SentenceTransformer = None
-
-# Переменная для рантайма, тип Any, может быть либо классом, либо None
-SentenceTransformer: Any = _SentenceTransformer
+    SentenceTransformer = Any  # только для аннотаций/IDE, не используется при отсутствии пакета
+    _HAS_SENTENCE_TRANSFORMERS = False
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ class HashEmbeddings(Embeddings):
 class SbertEmbeddings(Embeddings):
     def __init__(self, model_name: str):
         global _sbert_cache
-        if SentenceTransformer is None:
+        if not _HAS_SENTENCE_TRANSFORMERS:
             raise RuntimeError("sentence-transformers is unavailable")
         if _sbert_cache is not None and getattr(_sbert_cache, "_model_card", None) == model_name:
             self.model = _sbert_cache
