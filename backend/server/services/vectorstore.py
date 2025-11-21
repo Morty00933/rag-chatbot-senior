@@ -8,10 +8,6 @@ import threading
 from .interfaces import VectorStore
 from ..core.config import settings
 
-# Для mypy объявляем как Any, а реальное значение задаём ниже
-QdrantClient: Any
-PointStruct: Any
-
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient as _QdrantClient
     from qdrant_client.http.models import Distance, PointStruct as _PointStruct, VectorParams
@@ -19,8 +15,9 @@ except Exception:  # noqa: BLE001 - if qdrant is unavailable we fall back to mem
     _QdrantClient = None
     _PointStruct = None
 
-QdrantClient = _QdrantClient
-PointStruct = _PointStruct
+# Рантайм-переменные: либо реальные классы, либо None, тип Any для mypy
+QdrantClient: Any = _QdrantClient
+PointStruct: Any = _PointStruct
 
 logger = logging.getLogger(__name__)
 
