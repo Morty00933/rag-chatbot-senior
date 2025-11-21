@@ -9,15 +9,15 @@ from .interfaces import VectorStore
 from ..core.config import settings
 
 try:  # pragma: no cover - optional dependency
-    from qdrant_client import QdrantClient as _QdrantClient
-    from qdrant_client.http.models import Distance, PointStruct as _PointStruct, VectorParams
+    from qdrant_client import QdrantClient
+    from qdrant_client.http.models import Distance, PointStruct, VectorParams
+    _HAS_QDRANT = True
 except Exception:  # noqa: BLE001 - if qdrant is unavailable we fall back to memory store
-    _QdrantClient = None
-    _PointStruct = None
-
-# Рантайм-переменные: либо реальные классы, либо None, тип Any для mypy
-QdrantClient: Any = _QdrantClient
-PointStruct: Any = _PointStruct
+    QdrantClient = Any  # только для аннотаций/IDE, не используется, если пакета нет
+    PointStruct = Any
+    Distance = Any
+    VectorParams = Any
+    _HAS_QDRANT = False
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class InMemoryVectorStore(VectorStore):
 
 class QdrantVS(VectorStore):
     def __init__(self, url: str, collection: str, dim: int):
-        if QdrantClient is None:
+        if not _HAS_QDRANT:
             raise RuntimeError("qdrant-client is unavailable")
         self.client = QdrantClient(url=url)
         self.collection = collection
