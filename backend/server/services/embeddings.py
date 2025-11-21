@@ -9,19 +9,17 @@ import os
 from .interfaces import Embeddings
 from ..core.config import settings
 
-# Для mypy объявляем как Any, а реальное значение задаём ниже
-SentenceTransformer: Any
-
 try:  # pragma: no cover - module availability depends on environment
     from sentence_transformers import SentenceTransformer as _SentenceTransformer
 except Exception:  # noqa: BLE001 - we intentionally swallow import issues here
     _SentenceTransformer = None
 
-SentenceTransformer = _SentenceTransformer
+# Переменная для рантайма, тип Any, может быть либо классом, либо None
+SentenceTransformer: Any = _SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
-_sbert_cache: "SentenceTransformer | None" = None
+_sbert_cache: Any | None = None
 _embeddings_singleton: Embeddings | None = None
 
 
@@ -54,7 +52,7 @@ class SbertEmbeddings(Embeddings):
         global _sbert_cache
         if SentenceTransformer is None:
             raise RuntimeError("sentence-transformers is unavailable")
-        if _sbert_cache and getattr(_sbert_cache, "_model_card", None) == model_name:
+        if _sbert_cache is not None and getattr(_sbert_cache, "_model_card", None) == model_name:
             self.model = _sbert_cache
         else:
             model = SentenceTransformer(model_name)
@@ -76,6 +74,7 @@ def _build_embeddings() -> Embeddings:
     if provider == "sbert":
         if os.environ.get("PYTEST_CURRENT_TEST"):
             logger.info("Using HashEmbeddings because tests are running")
+            return HashEmbeddings(settings.EMBED_DIM)
         try:
             return SbertEmbeddings(settings.EMBED_MODEL)
         except Exception as exc:  # noqa: BLE001 - we want a graceful fallback
