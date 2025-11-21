@@ -31,7 +31,7 @@ jobs:
         run: ruff check backend scripts
 
       - name: Mypy
-        run: mypy
+        run: mypy backend
 
       - name: Black (check)
         run: black --check backend
